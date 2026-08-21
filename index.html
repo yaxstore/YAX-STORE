@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YAX STORE — ID Rapi</title>
+<style>
+  :root{
+    --navy-950:#020617;
+    --navy-900:#0a1435;
+    --navy-800:#0f1d4a;
+    --navy-700:#152863;
+    --navy-600:#1c357f;
+    --blue-accent:#2f5ce0;
+    --gold:#f6c453;
+    --text-light:#e7ecff;
+    --text-dim:#93a2d6;
+    --green:#3ddc84;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(circle at 20% -10%, rgba(47,92,224,0.25), transparent 40%),
+      radial-gradient(circle at 100% 0%, rgba(246,196,83,0.08), transparent 30%),
+      var(--navy-950);
+    color:var(--text-light);
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  header{
+    text-align:center;
+    padding:48px 20px 32px;
+    background:linear-gradient(180deg, var(--navy-900), transparent);
+    border-bottom:1px solid var(--navy-700);
+  }
+  header h1{
+    font-size:2.4rem;
+    letter-spacing:2px;
+    background:linear-gradient(90deg, var(--gold), #ffe9a8);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-shadow:0 0 30px rgba(246,196,83,0.15);
+  }
+  header p{
+    margin-top:8px;
+    color:var(--text-dim);
+    font-size:0.95rem;
+    letter-spacing:0.5px;
+  }
+  .badge-live{
+    display:inline-block;
+    margin-top:18px;
+    padding:8px 18px;
+    background:var(--navy-800);
+    border:1px solid var(--blue-accent);
+    border-radius:30px;
+    font-size:0.85rem;
+    color:var(--gold);
+    font-weight:600;
+  }
+  main{
+    max-width:900px;
+    margin:0 auto;
+    padding:32px 16px;
+  }
+  section{margin-bottom:44px;}
+  .section-title{
+    font-size:1.15rem;
+    font-weight:700;
+    margin-bottom:18px;
+    color:var(--text-light);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:14px;
+  }
+  .card{
+    background:linear-gradient(160deg, var(--navy-800), var(--navy-900));
+    border:1px solid var(--navy-700);
+    border-radius:14px;
+    padding:16px;
+    position:relative;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .card:hover{
+    transform:translateY(-3px);
+    border-color:var(--blue-accent);
+  }
+  .card .id-number{
+    font-size:1.05rem;
+    font-weight:700;
+    letter-spacing:0.5px;
+    word-break:break-all;
+  }
+  .card .price{
+    margin-top:6px;
+    color:var(--gold);
+    font-weight:700;
+    font-size:1rem;
+  }
+  .tag{
+    display:inline-block;
+    margin-top:8px;
+    font-size:0.75rem;
+    padding:3px 9px;
+    border-radius:20px;
+    background:rgba(246,196,83,0.12);
+    color:var(--gold);
+    border:1px solid rgba(246,196,83,0.3);
+  }
+  .status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:10px;
+    font-size:0.8rem;
+    color:var(--green);
+  }
+  .status::before{
+    content:"";
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 8px var(--green);
+  }
+  .buy-btn{
+    margin-top:12px;
+    width:100%;
+    padding:10px;
+    background:linear-gradient(90deg, var(--blue-accent), #1c3fae);
+    border:none;
+    border-radius:10px;
+    color:#fff;
+    font-weight:700;
+    cursor:pointer;
+    font-size:0.9rem;
+    letter-spacing:0.3px;
+    transition:filter .15s ease;
+  }
+  .buy-btn:hover{filter:brightness(1.15);}
+
+  .payment-box, .music-box{
+    background:var(--navy-800);
+    border:1px solid var(--navy-700);
+    border-radius:16px;
+    padding:24px;
+  }
+  .payment-box .dana{
+    font-size:1.2rem;
+    font-weight:700;
+    color:var(--gold);
+    margin:10px 0;
+  }
+  .payment-box p{
+    color:var(--text-dim);
+    font-size:0.9rem;
+    line-height:1.5;
+    margin-bottom:16px;
+  }
+  .wa-btn{
+    display:inline-block;
+    padding:12px 22px;
+    background:var(--green);
+    color:#02220f;
+    border-radius:10px;
+    font-weight:700;
+    text-decoration:none;
+    font-size:0.9rem;
+  }
+
+  .song{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--navy-700);
+    gap:12px;
+  }
+  .song:last-child{border-bottom:none;}
+  .song-info{font-size:0.9rem;}
+  .song-info .num{color:var(--blue-accent); font-weight:700; margin-right:6px;}
+  .play-btn{
+    padding:8px 16px;
+    background:var(--navy-700);
+    border:1px solid var(--blue-accent);
+    border-radius:20px;
+    color:var(--text-light);
+    text-decoration:none;
+    font-size:0.8rem;
+    white-space:nowrap;
+  }
+  .play-btn:hover{background:var(--blue-accent);}
+
+  footer{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.85rem;
+    padding:30px 0 10px;
+  }
+
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(2,6,23,0.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--navy-900);
+    border:1px solid var(--navy-700);
+    border-radius:16px;
+    padding:28px;
+    max-width:360px;
+    width:100%;
+    text-align:center;
+  }
+  .modal h3{margin-bottom:10px; color:var(--gold);}
+  .modal p{color:var(--text-dim); font-size:0.9rem; margin-bottom:20px; line-height:1.5;}
+  .modal-actions{display:flex; gap:10px;}
+  .modal-actions a, .modal-actions button{
+    flex:1;
+    padding:10px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:0.85rem;
+    border:none;
+    cursor:pointer;
+    text-decoration:none;
+  }
+  .modal-actions .confirm{background:var(--green); color:#02220f;}
+  .modal-actions .close{background:var(--navy-700); color:var(--text-light);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>YAX STORE</h1>
+  <p>Marketplace ID Rapi • Gaming Style • Harga Bersahabat</p>
+  <div class="badge-live">🔥 STOCK ID TERSEDIA</div>
+</header>
+
+<main>
+  <section>
+    <div class="section-title">📦 STOK ID YAX STORE</div>
+    <div class="grid" id="stockGrid"></div>
+  </section>
+
+  <section>
+    <div class="section-title">💳 Pembayaran DANA</div>
+    <div class="payment-box">
+      <div class="dana">DANA: 089685369067</div>
+      <p>Pembayaran dilakukan secara manual.<br>Setelah transfer, simpan bukti pembayaran lalu hubungi admin.</p>
+      <a class="wa-btn" href="https://wa.me/6289673930189" target="_blank">💬 CHAT ADMIN VIA WHATSAPP</a>
+    </div>
+  </section>
+
+
+</main>
+
+<footer>© 2026 YAX STORE — ID Rapi Marketplace</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>🔥 Konfirmasi Pembelian</h3>
+    <p style="margin-bottom:4px;">Kamu memilih ID:</p>
+    <p id="modalId" style="color:var(--text-light); font-weight:700; font-size:1.1rem; margin-bottom:14px;"></p>
+    <p style="margin-bottom:20px;">Harga: <span id="modalPrice" style="color:var(--gold); font-weight:700;"></span></p>
+    <p style="margin-bottom:6px;">Silakan transfer melalui DANA ke:</p>
+    <p id="modalDana" style="color:var(--text-light); font-weight:700; font-size:1.05rem; margin-bottom:20px;"></p>
+    <p style="margin-bottom:20px;">Setelah transfer, klik tombol HUBUNGI ADMIN.</p>
+    <div class="modal-actions">
+      <a class="confirm" id="modalWaBtn" href="https://wa.me/6289673930189" target="_blank">💬 HUBUNGI ADMIN</a>
+      <button class="close" onclick="closeModal()">TUTUP</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const stock = [
+    { id:"16565777719", price:"Rp2.000" },
+    { id:"16566899991", price:"Rp2.000" },
+    { id:"16566900001", price:"Rp2.000" },
+    { id:"16566900031", price:"Rp2.000" },
+    { id:"16595544403", price:"Rp2.000" },
+    { id:"16595544409", price:"Rp2.000" },
+    { id:"16595544444", price:"Rp2.000" },
+    { id:"16595544448", price:"Rp2.000" },
+    { id:"16595591888", price:"Rp2.000" },
+    { id:"17005990020", price:"Rp2.000" },
+    { id:"17006000109", price:"Rp2.000", tag:"💖 SPECIAL" },
+    { id:"17006000110", price:"Rp2.000", tag:"💖 SPECIAL" },
+    { id:"17006002026", price:"Rp2.000", tag:"🤩 UNIK" },
+    { id:"17006003020", price:"Rp2.000" },
+    { id:"17006004060", price:"Rp2.000" },
+    { id:"17006005503", price:"Rp2.000" },
+    { id:"17006005520", price:"Rp2.000" },
+    { id:"17006007006", price:"Rp2.000" },
+    { id:"17006009900", price:"Rp2.000" },
+    { id:"17006050007", price:"Rp2.000" },
+    { id:"17006058000", price:"Rp2.000" },
+    { id:"17006160007", price:"Rp2.000" },
+    { id:"17006202020", price:"Rp2.000", tag:"🤩 SPAM 20 × 3" },
+    { id:"17010711111", price:"Rp10.000" },
+    { id:"17008000009", price:"Rp12.000", tag:"🥵 RAPIH PARAH" },
+    { id:"17007777377", price:"Rp10.000", tag:"🔥 SPAM 7" },
+    { id:"17007000040", price:"Rp10.000" },
+    { id:"17007000007", price:"Rp12.000", tag:"🥵 RAPIH PARAH" },
+    { id:"17006000079", price:"Rp10.000" },
+  ];
+
+  const songs = [
+    { title:"Sesi Potret — eñau ft. Ari Lesmana 🥇", q:"Sesi Potret enau Ari Lesmana" },
+    { title:"Teh Hijau — Tulus 🌿", q:"Teh Hijau Tulus" },
+    { title:"TABOLA BALE — Silet Open Up, Jacson Seran, Juan Reza & Diva Aurel", q:"TABOLA BALE Silet Open Up Jacson Seran Juan Reza Diva Aurel" },
+    { title:"Bahagia Lagi — Piche Kota", q:"Bahagia Lagi Piche Kota" },
+    { title:"Kota Ini Tak Sama Tanpamu — Nadhif Basalamah", q:"Kota Ini Tak Sama Tanpamu Nadhif Basalamah" },
+    { title:"Sedia Aku Sebelum Hujan — Idgitaf", q:"Sedia Aku Sebelum Hujan Idgitaf" },
+    { title:"Everything U Are — Hindia", q:"Everything U Are Hindia" },
+    { title:"Bersenja Gurau — Raim Laode", q:"Bersenja Gurau Raim Laode" },
+    { title:"Lesung Pipi — Raim Laode", q:"Lesung Pipi Raim Laode" },
+    { title:"Jangan Paksa Rindu - Beda — Ifan Seventeen", q:"Jangan Paksa Rindu Beda Ifan Seventeen" },
+  ];
+
+  const grid = document.getElementById('stockGrid');
+  stock.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="id-number">${item.id}</div>
+      <div class="price">${item.price}</div>
+      ${item.tag ? `<div class="tag">${item.tag}</div>` : ''}
+      <div class="status">TERSEDIA</div>
+      <button class="buy-btn" onclick="openModal('${item.id}')">BELI SEKARANG</button>
+    `;
+    grid.appendChild(card);
+  });
+
+  const songList = document.getElementById('songList');
+  songs.forEach((song, i) => {
+    const row = document.createElement('div');
+    row.className = 'song';
+    row.innerHTML = `
+      <div class="song-info"><span class="num">${String(i+1).padStart(2,'0')}.</span>${song.title}</div>
+      <a class="play-btn" href="https://www.youtube.com/results?search_query=${encodeURIComponent(song.q)}" target="_blank">▶ PUTAR</a>
+    `;
+    songList.appendChild(row);
+  });
+
+  const DANA_NUMBER = "089685369067";
+  const ADMIN_WA = "6289673930189";
+
+  function openModal(id){
+    const item = stock.find(s => s.id === id);
+    document.getElementById('modalId').textContent = id;
+    document.getElementById('modalPrice').textContent = item ? item.price : '-';
+    document.getElementById('modalDana').textContent = DANA_NUMBER;
+
+    const waMessage = `Halo Admin Vanzz12str 👋\n\nSaya ingin membeli ID:\n${id}\n\nHarga: ${item ? item.price : ''}\n\nSaya sudah melakukan pembayaran DANA ke ${DANA_NUMBER}.\nSaya akan mengirimkan bukti`;
+    document.getElementById('modalWaBtn').href = `https://wa.me/${ADMIN_WA}?text=${encodeURIComponent(waMessage)}`;
+
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function closeModal(){
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+</script>
+
+</body>
+</html>
