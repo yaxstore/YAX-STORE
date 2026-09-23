@@ -27,30 +27,32 @@ function genPwd() {
   return 'Yax-' + r + '-CORE';
 }
 
-function varint(n) {
-  const o = [];
-  while (true) {
-    let b = n & 0x7f;
-    n >>>= 7;
-    if (n) b |= 0x80;
-    o.push(b);
-    if (!n) break;
-  }
-  return Buffer.from(o);
-}
+// ===== BUILD MAJOR PAYLOAD (PORTED DARI cv.py) =====
+function buildMajorPayload(accessToken, openId, lang, name) {
+  // Bagian 1: header device info (statis)
+  const part1 = Buffer.from(
+    '1a1320252d30382d33302030353a31393a3231220966726565206669726528013a08312e3131342e31334232416e64726f6964204f532039202f204150492d3238202850492f72656c2e636a772e32303232303531382e313134313333294a0848616e6468656c64520a41544d204d6f62696c735a045749464960b60a68ee05720333300',
+    'hex'
+  );
 
-function proto(f) {
-  const c = [];
-  for (const [k,v] of Object.entries(f)) {
-    const n = parseInt(k);
-    if (typeof v === 'string') {
-      const b = Buffer.from(v,'utf-8');
-      c.push(varint((n<<3)|2), varint(b.length), b);
-    } else if (typeof v === 'number') {
-      c.push(varint((n<<3)|0), varint(v));
-    }
-  }
-  return Buffer.concat(c);
+  // Bagian 2: lang
+  const part2 = Buffer.from(lang, 'ascii');
+
+  // Bagian 3: template panjang dengan placeholder access_token & open_id
+  // Placeholder: "afcfbf13334be42036e4f742c80b956344bed760ac91b3aff9b607a610ab4390" = access_token
+  //              "1d8ec0240ede109973f3321b9354b44d" = open_id
+  const part3Template = Buffer.from(
+    'b201203164386563303234306564653130393937336633333231623933353462343464ba010134c2010848616e6468656c64ca01104173757320415355535f493030354441ea014061666366626631333333346265343230333665346637343263383062393536333434626564373630616339316233616666396236303761363130616234333930f00101ca020a41544d204d6f62696c73d2020457494649ca03203734323862323533646566633136343031386336303461316562626665626466e003a88102e803f6e501f003af13f80384078004e7f0018804a881029004e7f0019804a88102c80401d2043d2f646174612f6170702f636f6d2e6474732e667265656669726574682d506465446e4f696c4353466e3337703141485f466c673d3d2f6c69622f61726de00401ea045f32303837663631633139663537663261663465376665666630623234643964397c2f646174612f6170702f636f6d2e6474732e667265656669726574682d506465446e4f696c4353466e3337703141485f466c673d3d2f626173652e61706bf00403f804018a0502329a050a32303139313138363933b205094f70656e474c455332b805ff7fc00504e005f346ea0507616e64726f6964f205704b71734854355a4c5772596c6a4e62355671682f2f7946526c615048534f394e5753517356764f6d646845456e37572b56484e554b2b512b666475413370744e724742304c6c304c527a335757306a4f7765734c6a3661695537735a34307038426655452f46492f6a7a535477526532f805fbe4068806019006019a060134a2060134b206224751400e5e00440655410e504d0d13685a0754060c6d5c560e6a59563b0b5535',
+    'hex'
+  );
+
+  // Replace placeholder dengan actual values
+  let part3Str = part3Template.toString('latin1');
+  part3Str = part3Str.replace('afcfbf13334be42036e4f742c80b956344bed760ac91b3aff9b607a610ab4390', accessToken);
+  part3Str = part3Str.replace('1d8ec0240ede109973f3321b9354b44d', openId);
+  const part3 = Buffer.from(part3Str, 'latin1');
+
+  return Buffer.concat([part1, part2, part3]);
 }
 
 async function gen(region, prefix) {
@@ -109,30 +111,10 @@ async function gen(region, prefix) {
   const at = t.data.data.access_token;
   const oi = t.data.data.open_id;
 
-  // ===== STEP 2.5: Build FIELD (XOR open_id) =====
-  const keystream = [0x30,0x30,0x30,0x32,0x30,0x31,0x37,0x30,0x30,0x30,0x30,0x30,0x32,0x30,0x31,0x37,
-                     0x30,0x30,0x30,0x30,0x30,0x32,0x30,0x31,0x37,0x30,0x30,0x30,0x30,0x30,0x32,0x30];
-  const fieldBytes = Buffer.alloc(oi.length);
-  for (let i = 0; i < oi.length; i++) {
-    fieldBytes[i] = oi.charCodeAt(i) ^ keystream[i % keystream.length];
-  }
-  const field = fieldBytes.toString('latin1');
-
-  // ===== STEP 3: Major Register + Login =====
-  const pr = proto({
-    1: prefix + Math.floor(10000+Math.random()*90000),
-    2: at,
-    3: oi,
-    5: 102000007,
-    6: 4,
-    7: 1,
-    13: 1,
-    14: field,
-    15: lang,
-    16: 1,
-    17: 1
-  });
-  const e = enc(pr.toString('hex'));
+  // ===== STEP 3: Build Payload + Encrypt =====
+  const name = prefix + Math.floor(10000+Math.random()*90000);
+  const payload = buildMajorPayload(at, oi, lang, name);
+  const e = enc(payload.toString('hex'));
 
   const mh = {
     'User-Agent':'UnityPlayer/2018.4.12f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)',
@@ -148,7 +130,7 @@ async function gen(region, prefix) {
 
   const mr = await s.post('https://loginbp.ppmainecoonghj.com/MajorRegister', e, { headers: mh });
   if (mr.status !== 200) {
-    throw new Error('MAJOR_REG_FAIL status=' + mr.status + ' resp=' + String(mr.data).substring(0,100));
+    throw new Error('MAJOR_REG_FAIL status=' + mr.status + ' resp=' + String(mr.data).substring(0,200));
   }
 
   const lr = await s.post('https://loginbp.ppmainecoonghj.com/MajorLogin', e, { headers: mh });
@@ -171,7 +153,7 @@ async function gen(region, prefix) {
   if (!aid) throw new Error('NO_ACCOUNT_ID');
 
   return {
-    uid: String(uid), password: pwd, name: prefix,
+    uid: String(uid), password: pwd, name,
     account_id: String(aid), jwt_token: tk, region: region.toUpperCase()
   };
 }
