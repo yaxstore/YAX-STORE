@@ -15,15 +15,18 @@ function enc(hex) {
   const c = crypto.createCipheriv('aes-128-cbc', AES_KEY, AES_IV);
   return Buffer.concat([c.update(Buffer.from(hex,'hex')), c.final()]).toString('hex');
 }
+
 function sig(p) {
   return crypto.createHmac('sha256', API_SECRET).update(p).digest('hex');
 }
+
 function genPwd() {
   const ch = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let r = '';
   for (let i=0;i<8;i++) r += ch[Math.floor(Math.random()*ch.length)];
   return 'Yax-' + r + '-CORE';
 }
+
 function varint(n) {
   const o = [];
   while (true) {
@@ -35,6 +38,7 @@ function varint(n) {
   }
   return Buffer.from(o);
 }
+
 function proto(f) {
   const c = [];
   for (const [k,v] of Object.entries(f)) {
@@ -62,7 +66,7 @@ async function gen(region, prefix) {
     validateStatus: () => true
   });
 
-  // STEP 1: Register — PAKE Content-Type JSON
+  // ===== STEP 1: Register =====
   const rp = JSON.stringify({ app_id:100067, client_type:2, password:pwd, source:2 });
   const r = await s.post(
     'https://100067.connect.garena.com/api/v2/oauth/guest:register',
@@ -71,8 +75,7 @@ async function gen(region, prefix) {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': 'Signature ' + sig(rp),
-        'Host': '100067.connect.garena.com',
-        'Cookie': 'datadome=oYpIhVco_RFvLHe_T9KFd5wuY0gcQuNfrlt4rHJY5QOkwv4TGt8gPMK32MbHuBdzJyfXnXlfzNZT_2tHr2kys8AMYT2~T71QP1S78_7Pdx4JLOXdSrflPT6cOX2vsyJh'
+        'Host': '100067.connect.garena.com'
       }
     }
   );
@@ -82,7 +85,7 @@ async function gen(region, prefix) {
   }
   const uid = r.data.data.uid;
 
-  // STEP 2: Token
+  // ===== STEP 2: Token =====
   const tp = JSON.stringify({
     client_id:100067, client_secret:API_SECRET, client_type:2,
     device_id:'02-344afb0e-593c-40b7-92f2-171972f74807',
@@ -95,8 +98,7 @@ async function gen(region, prefix) {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': 'Signature ' + sig(tp),
-        'Host': '100067.connect.garena.com',
-        'Cookie': 'datadome=y23Z3X17pgkMHEt5zY8dqxC6BIf7WJMgC0RXNbqifHT7t9zajKe_hegFb1Ie9_7JixXpz7FRGVodOn~mWPk_NrqIIhUOXDYqKOahzoRQcyEy77GWEMcdA9_MqPJeM5qv'
+        'Host': '100067.connect.garena.com'
       }
     }
   );
@@ -107,7 +109,7 @@ async function gen(region, prefix) {
   const at = t.data.data.access_token;
   const oi = t.data.data.open_id;
 
-  // STEP 3: Major Register + Login
+  // ===== STEP 3: Major Register + Login =====
   const pr = proto({ 1: prefix + Math.floor(10000+Math.random()*90000), 2: at, 3: oi, 15: lang });
   const e = enc(pr.toString('hex'));
 
@@ -121,10 +123,11 @@ async function gen(region, prefix) {
   await s.post('https://loginbp.ppmainecoonghj.com/MajorRegister', e, { headers: mh });
   const lr = await s.post('https://loginbp.ppmainecoonghj.com/MajorLogin', e, { headers: mh });
 
+  // ===== STEP 4: Extract JWT =====
   const txt = typeof lr.data === 'string' ? lr.data : JSON.stringify(lr.data);
   const i = txt.indexOf('eyJ');
   if (i === -1) {
-    throw new Error('NO_JWT major_reg=' + lr.status + ' data=' + txt.substring(0,200));
+    throw new Error('NO_JWT status=' + lr.status + ' resp=' + txt.substring(0,200));
   }
 
   let tk = txt.substring(i);
@@ -166,7 +169,6 @@ module.exports = async (req, res) => {
     }
 
     if (!accounts.length) {
-      // Kembalikan 200 supaya script Python bisa baca error message
       return res.status(200).json({ success:false, accounts:[], errors });
     }
 
