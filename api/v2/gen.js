@@ -109,25 +109,55 @@ async function gen(region, prefix) {
   const at = t.data.data.access_token;
   const oi = t.data.data.open_id;
 
+  // ===== STEP 2.5: Build FIELD (XOR open_id) =====
+  const keystream = [0x30,0x30,0x30,0x32,0x30,0x31,0x37,0x30,0x30,0x30,0x30,0x30,0x32,0x30,0x31,0x37,
+                     0x30,0x30,0x30,0x30,0x30,0x32,0x30,0x31,0x37,0x30,0x30,0x30,0x30,0x30,0x32,0x30];
+  const fieldBytes = Buffer.alloc(oi.length);
+  for (let i = 0; i < oi.length; i++) {
+    fieldBytes[i] = oi.charCodeAt(i) ^ keystream[i % keystream.length];
+  }
+  const field = fieldBytes.toString('latin1');
+
   // ===== STEP 3: Major Register + Login =====
-  const pr = proto({ 1: prefix + Math.floor(10000+Math.random()*90000), 2: at, 3: oi, 15: lang });
+  const pr = proto({
+    1: prefix + Math.floor(10000+Math.random()*90000),
+    2: at,
+    3: oi,
+    5: 102000007,
+    6: 4,
+    7: 1,
+    13: 1,
+    14: field,
+    15: lang,
+    16: 1,
+    17: 1
+  });
   const e = enc(pr.toString('hex'));
 
   const mh = {
     'User-Agent':'UnityPlayer/2018.4.12f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)',
-    'X-GA-SV':'1789535859','Authorization':'Bearer','X-GA':'v1 1',
-    'ReleaseVersion':'OB55','Content-Type':'application/x-www-form-urlencoded',
-    'X-Unity-Version':'2018.4.12f1','Host':'loginbp.ppmainecoonghj.com'
+    'Accept-Encoding':'deflate, gzip',
+    'X-GA-SV':'1789535859',
+    'Authorization':'Bearer',
+    'X-GA':'v1 1',
+    'ReleaseVersion':'OB55',
+    'Content-Type':'application/x-www-form-urlencoded',
+    'X-Unity-Version':'2018.4.12f1',
+    'Host':'loginbp.ppmainecoonghj.com'
   };
 
-  await s.post('https://loginbp.ppmainecoonghj.com/MajorRegister', e, { headers: mh });
+  const mr = await s.post('https://loginbp.ppmainecoonghj.com/MajorRegister', e, { headers: mh });
+  if (mr.status !== 200) {
+    throw new Error('MAJOR_REG_FAIL status=' + mr.status + ' resp=' + String(mr.data).substring(0,100));
+  }
+
   const lr = await s.post('https://loginbp.ppmainecoonghj.com/MajorLogin', e, { headers: mh });
 
   // ===== STEP 4: Extract JWT =====
   const txt = typeof lr.data === 'string' ? lr.data : JSON.stringify(lr.data);
   const i = txt.indexOf('eyJ');
   if (i === -1) {
-    throw new Error('NO_JWT status=' + lr.status + ' resp=' + txt.substring(0,200));
+    throw new Error('NO_JWT status=' + lr.status + ' resp=' + txt.substring(0,300));
   }
 
   let tk = txt.substring(i);
