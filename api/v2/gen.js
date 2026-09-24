@@ -27,6 +27,23 @@ function genPwd() {
   return 'Yax-' + r + '-CORE';
 }
 
+// ===== RANDOM DEVICE ID =====
+function randomDeviceId() {
+  const hex = '0123456789abcdef';
+  let r = '02-';
+  for (let i = 0; i < 8; i++) r += hex[Math.floor(Math.random()*16)];
+  r += '-';
+  for (let i = 0; i < 4; i++) r += hex[Math.floor(Math.random()*16)];
+  r += '-4';
+  for (let i = 0; i < 3; i++) r += hex[Math.floor(Math.random()*16)];
+  r += '-';
+  r += (8 + Math.floor(Math.random()*4)).toString(16);
+  for (let i = 0; i < 3; i++) r += hex[Math.floor(Math.random()*16)];
+  r += '-';
+  for (let i = 0; i < 12; i++) r += hex[Math.floor(Math.random()*16)];
+  return r;
+}
+
 function varint(n) {
   const o = [];
   while (true) {
@@ -85,10 +102,10 @@ async function gen(region, prefix) {
   }
   const uid = r.data.data.uid;
 
-  // ===== STEP 2: Token =====
+  // ===== STEP 2: Token (PAKE RANDOM DEVICE ID) =====
   const tp = JSON.stringify({
     client_id:100067, client_secret:API_SECRET, client_type:2,
-    device_id:'02-344afb0e-593c-40b7-92f2-171972f74807',
+    device_id: randomDeviceId(),
     password:pwd, response_type:'token', uid
   });
   const t = await s.post(
