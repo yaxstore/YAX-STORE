@@ -57,7 +57,6 @@ def health():
 
 
 @app.route("/api/v2/gen", methods=["GET"])
-@require_api_key
 def generate():
     try:
         count = int(request.args.get("count", 1))
