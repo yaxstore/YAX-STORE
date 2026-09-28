@@ -1,5 +1,5 @@
 # ============================================================
-# GARENA DIRECT GENERATOR
+# GARENA DIRECT GENERATOR (KOYEB/RENDER EDITION)
 # ============================================================
 import hmac, hashlib, requests, string, random, json, codecs, secrets, base64
 from datetime import datetime
@@ -50,8 +50,9 @@ class ProtoBuilder:
 class SecurityEngine:
     @staticmethod
     def generate_ultra_secure_password() -> str:
-        s = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
-        return f"Yax_{s}"
+        # Format: Kyn_<16 hex uppercase>
+        s = ''.join(secrets.choice("0123456789ABCDEF") for _ in range(16))
+        return f"Kyn_{s}"
 
     @staticmethod
     def encrypt_api_payload(plain_hex: str) -> str:
@@ -191,11 +192,54 @@ class AccountGenerator:
                     'unicode_escape'
                 ).encode('latin1')
 
+                # Nama random 6 huruf uppercase -> total "UserXXXXXX" (8 karakter)
                 rand_suffix = ''.join(random.choices(string.ascii_uppercase, k=6))
-                name = f"{prefix}{rand_suffix}"
+                name = f"User{rand_suffix}"
                 lang = Config.REGION_LANG.get(region.upper(), "en")
 
                 proto = ProtoBuilder.build({
+                    1: name, 2: access_token, 3: open_id, 5: 102000007,
+                    6: 4, 7: 1, 13: 1, 14: field, 15: lang, 16: 1, 17: 1
+                })
+                enc_major = bytes.fromhex(SecurityEngine.encrypt_api_payload(proto.hex()))
+
+                headers_major = {
+                    "User-Agent": "UnityPlayer/2018.4.12f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)",
+                    "Accept-Encoding": "deflate, gzip",
+                    "X-GA-SV": "1789535859",
+                    "Authorization": "Bearer",
+                    "X-GA": "v1 1",
+                    "ReleaseVersion": "OB55",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-Unity-Version": "2018.4.12f1",
+                    "Host": "loginbp.ppmainecoonghj.com"
+                }
+                api.session.post(
+                    "https://loginbp.ppmainecoonghj.com/MajorRegister",
+                    headers=headers_major, data=enc_major, verify=False, timeout=20
+                )
+
+                login_data = api.perform_major_login(access_token, open_id, lang)
+                if login_data:
+                    account_id = login_data["account_id"]
+                    rarity, patterns, score, reason = check_rarity(account_id)
+
+                    return {
+                        "account_id": str(account_id),
+                        "created_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                        "jwt_token": login_data.get("jwt_token", ""),
+                        "name": name,
+                        "password": password,
+                        "patterns": patterns,
+                        "rarity": rarity,
+                        "rarity_reason": reason,
+                        "rarity_score": score,
+                        "region": region.upper(),
+                        "uid": int(uid)
+                    }
+            except Exception as e:
+                print(f"[GARENA-ERROR] {type(e).__name__}: {e}", flush=True)
+        return Noneder.build({
                     1: name, 2: access_token, 3: open_id, 5: 102000007,
                     6: 4, 7: 1, 13: 1, 14: field, 15: lang, 16: 1, 17: 1
                 })
