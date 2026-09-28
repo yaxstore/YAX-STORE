@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: yax-api
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1 --threads 4
+    healthCheckPath: /api/v2/health
+    envVars:
+      - key: YAX_API_KEYS
+        value: yax-secret-key-1,yax-secret-key-2
+      - key: PYTHON_VERSION
+        value: 3.11.9
