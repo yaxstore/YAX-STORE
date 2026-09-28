@@ -122,5 +122,4 @@ def check_rarity(account_id):
         reason = f"Score:{score} | {','.join(patterns_found[:10])}"
         return rarity, patterns_found, score, reason
 
-    # NORMAL: patterns kosong, reason kosong
     return "NORMAL", [], score, ""
